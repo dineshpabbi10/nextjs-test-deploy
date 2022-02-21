@@ -1,50 +1,61 @@
 import Head from 'next/head'
+import { useState } from 'react'
+import { Calendar } from 'primereact/calendar';
+import "primereact/resources/themes/lara-light-indigo/theme.css";  //theme
+import "primereact/resources/primereact.min.css";  
 
-export default function Home() {
+// This gets called on every request
+export async function getServerSideProps() {
+  // Fetch data from external API
+  const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/hello`)
+  const data = await res.json();
+  console.log(data);
+
+  // Pass data to the page via props
+  return { props: { data } }
+}
+
+export default function Home({data}) {
+  const [query,setQuery] = useState("");
+  const [meaning,setMeaning] = useState("");
+  const [date,setDate] = useState(null);
+
+  const searchWord = ()=>{
+    const url = "https://api.dictionaryapi.dev/api/v2/entries/en/"+query;
+    fetchData(url);
+  }
+
+  function fetchData(url){
+    fetch(url)
+      .then(res => res.json())
+      .then(data => setMeaning(data[0]?.["meanings"]?.[0]?.["definitions"]?.[0]?.["definition"]))
+  }
+
   return (
     <div className="container">
+      <Calendar inline value={date} onChange={(e) => setDate(e.value)}></Calendar>
       <Head>
-        <title>Create Next App</title>
+        <title>A Simple Free Dictionary</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main>
         <h1 className="title">
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
+          Welcome to Free Dictionary!
         </h1>
 
         <p className="description">
-          Get started by editing <code>pages/index.js</code>
+          Get started by searching a word
         </p>
 
         <div className="grid">
-          <a href="https://nextjs.org/docs" className="card">
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+          <div className="card">
+              <input type={"text"} value={query} onChange={e=>setQuery(e.target.value)} />
+              <button onClick={searchWord} type='button'>Submit</button>
+              Meaning : {data[0]?.["meanings"]?.[0]?.["definitions"]?.[0]?.["definition"]} <br/>
+              Meaning from client fetch : {meaning}
+          </div>
 
-          <a href="https://nextjs.org/learn" className="card">
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className="card"
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className="card"
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
         </div>
       </main>
 
